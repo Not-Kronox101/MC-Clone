@@ -1,0 +1,50 @@
+minecraft/
+├── desktop/                            # Desktop launcher
+│   └── src/
+│       └── DesktopLauncher.java        # Main method for running on desktop
+├── core/                               # Core shared code for all platforms
+│   ├── assets/                         # Game textures and assets
+│   │   ├── blocks/                     # block textures (e.g., grass.png, dirt.png)
+│   │   └── texture_atlas.png
+│   └── src/
+│       ├── MinecraftClone.java         # Entry point (extends ApplicationAdapter or Game)
+│
+│       ├── world/                      # World and block system
+│       │   ├── World.java              # Handles block access, chunk loading
+│       │   ├── Block.java              # Enum or class with block types & textures
+│       │   ├── Chunk.java              # 3D array of blocks, handles chunk size & updates
+│       │   ├── WorldGenerator.java     # Flat or noise-based terrain generation
+│       │   ├── WorldSaver.java         # Save/load worlds to disk
+│       │   └── WorldMetadata.java      # Stores world name, seed, version, etc.
+│
+│       ├── player/                     # Player-related logic
+│       │   ├── Player.java             # Handles position, movement, camera
+│       │   └── CameraController.java   # Mouse input → camera rotation
+│
+│       ├── input/                      # Input management
+│       │   └── InputHandler.java       # Key/mouse input for placing/breaking blocks
+│
+│       ├── render/                     # Rendering system
+│       │   ├── Renderer.java           # Handles mesh building & drawing blocks
+│       │   └── TextureManager.java     # Loads & manages textures and atlases
+│
+│       ├── io/                         # File I/O utilities
+│       │   ├── FileUtils.java          # Cross-platform file access
+│       │   ├── SerializationUtils.java # Save/load chunk data (binary or JSON)
+│       │   └── PlayerDataIO.java       # Saves player position, camera direction, etc.
+│
+│       ├── utils/                      # Utility code
+│       │   ├── Constants.java          # Block size, chunk size, gravity, etc.
+│       │   └── RayCaster.java          # Finds targeted block for interaction
+│
+│       └── MainConfig.java             # Game settings (resolution, debug flags, etc.)
+├── worlds/                             # World save directory (created at runtime)
+│   └── MyWorld/
+│       ├── world.meta                  # Metadata: seed, version, etc.
+│       ├── chunk_0_0.dat               # One chunk’s data
+│       ├── chunk_1_0.dat
+│       └── player.dat                  # Saved player state
+├── build.gradle
+├── gradlew
+├── gradlew.bat
+└── settings.gradle

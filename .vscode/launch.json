@@ -1,0 +1,22 @@
+{
+  "type": "java",
+  "name": "Launch Desktop",
+  "request": "launch",
+"mainClass": "src.DesktopLauncher",
+"configurations": [
+  {
+    "type": "java",
+    "name": "DesktopLauncher",
+    "request": "launch",
+    "mainClass": "desktop.DesktopLauncher",
+    "projectName": "desktop"
+  },
+  {
+    "type": "java",
+    "name": "DesktopLauncher",
+    "request": "launch",
+    "mainClass": "DesktopLauncher",
+    "projectName": "desktop"
+  }
+]
+}

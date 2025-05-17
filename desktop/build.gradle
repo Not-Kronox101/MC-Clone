@@ -1,0 +1,29 @@
+plugins {
+    id 'application'
+    id 'java'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':core')
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:1.12.0"
+    implementation "com.badlogicgames.gdx:gdx-platform:1.12.0:natives-desktop"
+}
+
+sourceSets.main.resources.srcDirs = ["assets"]
+
+application {
+    mainClass = 'desktop.DesktopLauncher'
+    applicationDefaultJvmArgs = ['-XstartOnFirstThread']
+}
