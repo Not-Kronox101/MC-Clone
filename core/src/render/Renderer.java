@@ -4,14 +4,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Vector3;
-import world.*;
-import world.Block;
 
+import player.Player;
+import world.*;
 import java.util.EnumMap;
+import utils.RayCaster;
+import utils.RayCaster.RaycastResult;
 
 public class Renderer {
     private final ModelBatch batch;
@@ -19,16 +22,21 @@ public class Renderer {
     private final ModelBuilder modelBuilder;
     private final ModelInstance[][][] blockInstances;
     private final World world;
+    private final ShapeRenderer shapeRenderer;
+
+    private Vector3 highlightedBlockPos;
 
     private final TextureManager textureManager;
     private final EnumMap<Block, Model> blockModels;
+    private final Player player;
 
-    public Renderer(World world, TextureManager textureManager) {
+    public Renderer(World world, TextureManager textureManager, Player player) {
+        this.player = player;
         this.world = world;
         this.textureManager = textureManager;
-
         batch = new ModelBatch();
         modelBuilder = new ModelBuilder();
+        shapeRenderer = new ShapeRenderer();
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 1f));
@@ -54,6 +62,7 @@ public class Renderer {
                 }
             }
         }
+
     }
 
     private void createBlockModels() {
@@ -81,6 +90,14 @@ public class Renderer {
         Gdx.gl.glClearColor(0.5f, 0.7f, 1f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
+            // Run raycast each frame
+        RaycastResult result = RayCaster.cast(world, player);
+        if (result != null) {
+            highlightedBlockPos = new Vector3(result.x, result.y, result.z);
+        } else {
+            highlightedBlockPos = null;
+        }
+
         batch.begin(camera);
         for (ModelInstance[][] layer : blockInstances) {
             for (ModelInstance[] row : layer) {
@@ -92,10 +109,27 @@ public class Renderer {
             }
         }
         batch.end();
+
+
+        // Draw highlight box
+        if (highlightedBlockPos != null) {
+            shapeRenderer.setProjectionMatrix(camera.combined);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+            shapeRenderer.setColor(Color.YELLOW);
+            shapeRenderer.box(
+                    highlightedBlockPos.x,
+                    highlightedBlockPos.y,
+                    highlightedBlockPos.z,
+                    1f, 1f, 1f
+            );
+            shapeRenderer.end();
+        }
+
     }
 
     public void dispose() {
         batch.dispose();
+        shapeRenderer.dispose();
         for (Model model : blockModels.values()) {
             model.dispose();
         }

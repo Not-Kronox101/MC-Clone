@@ -10,7 +10,6 @@ import world.World;
 public class InputHandler {
     private final Player player;
     private final World world;
-
     private float moveSpeed = 0.1f;
 
     public InputHandler(Player player, World world) {
@@ -25,30 +24,52 @@ public class InputHandler {
 
     private void handleMovement() {
         float yawRad = (float) Math.toRadians(player.getYaw());
+
+        // Forward vector (direction player is facing)
         float forwardX = (float) Math.sin(yawRad);
         float forwardZ = (float) Math.cos(yawRad);
+
+        // Strafe vector (perpendicular to forward)
         float strafeX = (float) Math.cos(yawRad);
         float strafeZ = (float) -Math.sin(yawRad);
 
+        float dx = 0, dy = 0, dz = 0;
+
+        // W - Forward
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-            player.move(forwardX * moveSpeed, 0, -forwardZ * moveSpeed);
+            dx += forwardX * moveSpeed;
+            dz += forwardZ * moveSpeed;
         }
+        // S - Backward
         if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-            player.move(-forwardX * moveSpeed, 0, forwardZ * moveSpeed);
+            dx -= forwardX * moveSpeed;
+            dz -= forwardZ * moveSpeed;
         }
+        // A - Strafe Left
         if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            player.move(strafeX * moveSpeed, 0, strafeZ * moveSpeed);
+            dx += strafeX * moveSpeed;
+            dz += strafeZ * moveSpeed;
         }
+        // D - Strafe Right
         if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            player.move(-strafeX * moveSpeed, 0, -strafeZ * moveSpeed);
+            dx -= strafeX * moveSpeed;
+            dz -= strafeZ * moveSpeed;
         }
+        // SPACE - Fly Up
         if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
-            player.move(0, moveSpeed, 0); // Jump or fly
+            dy += moveSpeed;
         }
+        // Z - Fly Down
+        if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
+            dy -= moveSpeed;
+        }
+
+        // Move with Minecraft-style collision
+        player.moveWithCollision(dx, dy, dz, world);
     }
 
     private void handleMouseInput() {
-        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.L)) {
             // Break block
             RayCaster.RaycastResult hit = RayCaster.cast(world, player);
             if (hit != null) {
@@ -56,7 +77,7 @@ public class InputHandler {
             }
         }
 
-        if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+        if (Gdx.input.isKeyPressed(Input.Keys.K)) {
             // Place block
             RayCaster.RaycastResult hit = RayCaster.cast(world, player);
             if (hit != null) {

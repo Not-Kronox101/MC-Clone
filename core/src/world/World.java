@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class World {
-    public static final int WIDTH = 256;  // example value
-    public static final int HEIGHT = 256; // add this line if missing
-    public static final int DEPTH = 256;  // example value
+    public static final int WIDTH = 16;
+    public static final int HEIGHT = 16;
+    public static final int DEPTH = 16;
 
     private final Map<String, Chunk> chunks = new HashMap<>();
 
@@ -15,12 +15,10 @@ public class World {
         // Initialize or load chunks here if needed
     }
 
-    // Generate chunk key from coordinates
     private String getChunkKey(int chunkX, int chunkZ) {
         return chunkX + "," + chunkZ;
     }
 
-    // Get chunk; if missing, generate a new one
     public Chunk getChunk(int chunkX, int chunkZ) {
         String key = getChunkKey(chunkX, chunkZ);
         if (!chunks.containsKey(key)) {
@@ -31,7 +29,6 @@ public class World {
         return chunks.get(key);
     }
 
-    // Simple flat terrain generation example
     private void generateChunkTerrain(Chunk chunk) {
         for (int x = 0; x < Constants.CHUNK_SIZE_X; x++) {
             for (int z = 0; z < Constants.CHUNK_SIZE_Z; z++) {
@@ -50,34 +47,34 @@ public class World {
         }
     }
 
-    // Access block by world coordinates
     public Block getBlock(int worldX, int worldY, int worldZ) {
-        int chunkX = worldX / Constants.CHUNK_SIZE_X;
-        int chunkZ = worldZ / Constants.CHUNK_SIZE_Z;
+        if (!isInBounds(worldX, worldY, worldZ)) {
+            return Block.AIR;
+        }
+
+        int chunkX = (int) Math.floor((double) worldX / Constants.CHUNK_SIZE_X);
+        int chunkZ = (int) Math.floor((double) worldZ / Constants.CHUNK_SIZE_Z);
 
         Chunk chunk = getChunk(chunkX, chunkZ);
 
-        int localX = worldX % Constants.CHUNK_SIZE_X;
-        int localZ = worldZ % Constants.CHUNK_SIZE_Z;
-
-        if (localX < 0) localX += Constants.CHUNK_SIZE_X;
-        if (localZ < 0) localZ += Constants.CHUNK_SIZE_Z;
+        int localX = worldX - chunkX * Constants.CHUNK_SIZE_X;
+        int localZ = worldZ - chunkZ * Constants.CHUNK_SIZE_Z;
 
         return chunk.getBlock(localX, worldY, localZ);
     }
 
-    // Set block by world coordinates
     public void setBlock(int worldX, int worldY, int worldZ, Block block) {
-        int chunkX = worldX / Constants.CHUNK_SIZE_X;
-        int chunkZ = worldZ / Constants.CHUNK_SIZE_Z;
+        if (!isInBounds(worldX, worldY, worldZ)) {
+            return;
+        }
+
+        int chunkX = (int) Math.floor((double) worldX / Constants.CHUNK_SIZE_X);
+        int chunkZ = (int) Math.floor((double) worldZ / Constants.CHUNK_SIZE_Z);
 
         Chunk chunk = getChunk(chunkX, chunkZ);
 
-        int localX = worldX % Constants.CHUNK_SIZE_X;
-        int localZ = worldZ % Constants.CHUNK_SIZE_Z;
-
-        if (localX < 0) localX += Constants.CHUNK_SIZE_X;
-        if (localZ < 0) localZ += Constants.CHUNK_SIZE_Z;
+        int localX = worldX - chunkX * Constants.CHUNK_SIZE_X;
+        int localZ = worldZ - chunkZ * Constants.CHUNK_SIZE_Z;
 
         chunk.setBlock(localX, worldY, localZ, block);
     }
@@ -85,22 +82,19 @@ public class World {
     public int getWidth() {
         return WIDTH;
     }
+
     public int getHeight() {
         return HEIGHT;
     }
+
     public int getDepth() {
         return DEPTH;
     }
 
-    //Checks inbound
     public boolean isInBounds(int x, int y, int z) {
+        return x >= 0 && x < getWidth() &&
+               y >= 0 && y < getHeight() &&
+               z >= 0 && z < getDepth();
+    }
+}
 
-    int minX = 1000, minY = 1000, minZ = 1000;
-    int maxX = getWidth() - 1;
-    int maxY = getHeight() - 1;
-    int maxZ = getDepth() - 1;
-    return x >= minX && x <= maxX &&
-           y >= minY && y <= maxY &&
-           z >= minZ && z <= maxZ;
-}
-}
