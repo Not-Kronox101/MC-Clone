@@ -46,6 +46,10 @@ public class Renderer {
     private static final float INVENTORY_PADDING = 10f;
     private static final Color INVENTORY_BG_COLOR = new Color(0.2f, 0.2f, 0.2f, 0.8f);
     private static final Color SLOT_COLOR = new Color(0.3f, 0.3f, 0.3f, 0.8f);
+    private static final Color SELECTED_SLOT_COLOR = new Color(0.4f, 0.4f, 0.4f, 0.8f);
+    private static final Color SELECTED_SLOT_BORDER = new Color(1f, 1f, 1f, 0.8f);
+    private static final Color HOVER_SLOT_COLOR = new Color(0.5f, 0.5f, 0.5f, 0.8f);
+    private static final Color HOVER_SLOT_BORDER = new Color(1f, 1f, 1f, 0.5f);
 
     public Renderer(World world, TextureManager textureManager, Player player) {
         this.player = player;
@@ -188,15 +192,42 @@ public class Renderer {
         shapeRenderer.rect(startX, startY, inventoryWidth, inventoryHeight);
         shapeRenderer.end();
 
+        // Get mouse position
+        float mouseX = Gdx.input.getX();
+        float mouseY = Gdx.graphics.getHeight() - Gdx.input.getY();
+        int hoverSlot = getSlotUnderMouse();
+
         // Draw slots
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(SLOT_COLOR);
-        
         for (int row = 0; row < INVENTORY_ROWS; row++) {
             for (int col = 0; col < INVENTORY_COLS; col++) {
                 float x = startX + INVENTORY_PADDING + col * (SLOT_SIZE + INVENTORY_PADDING);
                 float y = startY + INVENTORY_PADDING + row * (SLOT_SIZE + INVENTORY_PADDING);
+                
+                // Draw slot background
+                shapeRenderer.setColor(SLOT_COLOR);
                 shapeRenderer.rect(x, y, SLOT_SIZE, SLOT_SIZE);
+                
+                int slot = row * INVENTORY_COLS + col;
+                
+                // Draw selected slot highlight
+                if (slot == player.getInventory().getSelectedSlot()) {
+                    shapeRenderer.setColor(SELECTED_SLOT_COLOR);
+                    shapeRenderer.rect(x + 2, y + 2, SLOT_SIZE - 4, SLOT_SIZE - 4);
+                }
+                
+                // Draw hover highlight
+                if (slot == hoverSlot) {
+                    shapeRenderer.setColor(HOVER_SLOT_COLOR);
+                    shapeRenderer.rect(x + 2, y + 2, SLOT_SIZE - 4, SLOT_SIZE - 4);
+                    
+                    // Draw hover border
+                    shapeRenderer.setColor(HOVER_SLOT_BORDER);
+                    shapeRenderer.rect(x, y, SLOT_SIZE, 2); // Top
+                    shapeRenderer.rect(x, y + SLOT_SIZE - 2, SLOT_SIZE, 2); // Bottom
+                    shapeRenderer.rect(x, y, 2, SLOT_SIZE); // Left
+                    shapeRenderer.rect(x + SLOT_SIZE - 2, y, 2, SLOT_SIZE); // Right
+                }
             }
         }
         shapeRenderer.end();
@@ -211,6 +242,10 @@ public class Renderer {
                     float x = startX + INVENTORY_PADDING + col * (SLOT_SIZE + INVENTORY_PADDING);
                     float y = startY + INVENTORY_PADDING + row * (SLOT_SIZE + INVENTORY_PADDING);
                     
+                    // Draw block texture
+                    TextureRegion texture = textureManager.getBlockTexture(stack.getBlock());
+                    spriteBatch.draw(texture, x + 5, y + 5, SLOT_SIZE - 10, SLOT_SIZE - 10);
+                    
                     // Draw count
                     String count = String.valueOf(stack.getCount());
                     font.draw(spriteBatch, count, x + SLOT_SIZE - 20, y + 20);
@@ -218,6 +253,29 @@ public class Renderer {
             }
         }
         spriteBatch.end();
+    }
+
+    private int getSlotUnderMouse() {
+        float mouseX = Gdx.input.getX();
+        float mouseY = Gdx.graphics.getHeight() - Gdx.input.getY();
+        
+        float slotSize = SLOT_SIZE;
+        float inventoryWidth = slotSize * INVENTORY_COLS + (INVENTORY_COLS + 1) * INVENTORY_PADDING;
+        float inventoryHeight = slotSize * INVENTORY_ROWS + (INVENTORY_ROWS + 1) * INVENTORY_PADDING;
+        float startX = (Gdx.graphics.getWidth() - inventoryWidth) / 2;
+        float startY = (Gdx.graphics.getHeight() - inventoryHeight) / 2;
+
+        if (mouseX >= startX && mouseX < startX + inventoryWidth &&
+            mouseY >= startY && mouseY < startY + inventoryHeight) {
+            int col = (int)((mouseX - startX - INVENTORY_PADDING) / (slotSize + INVENTORY_PADDING));
+            int row = (int)((mouseY - startY - INVENTORY_PADDING) / (slotSize + INVENTORY_PADDING));
+            
+            // Check if mouse is actually over a slot (not in padding)
+            if (col >= 0 && col < INVENTORY_COLS && row >= 0 && row < INVENTORY_ROWS) {
+                return row * INVENTORY_COLS + col;
+            }
+        }
+        return -1;
     }
 
     private void renderHotbar() {
@@ -239,12 +297,26 @@ public class Renderer {
 
         // Draw slots
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(SLOT_COLOR);
-        
         for (int col = 0; col < INVENTORY_COLS; col++) {
             float x = startX + INVENTORY_PADDING + col * (SLOT_SIZE + INVENTORY_PADDING);
             float y = startY + INVENTORY_PADDING;
+            
+            // Draw slot background
+            shapeRenderer.setColor(SLOT_COLOR);
             shapeRenderer.rect(x, y, SLOT_SIZE, SLOT_SIZE);
+            
+            // Draw selected slot highlight
+            if (col == player.getInventory().getSelectedSlot()) {
+                shapeRenderer.setColor(SELECTED_SLOT_COLOR);
+                shapeRenderer.rect(x + 2, y + 2, SLOT_SIZE - 4, SLOT_SIZE - 4);
+                
+                // Draw white border around selected slot
+                shapeRenderer.setColor(SELECTED_SLOT_BORDER);
+                shapeRenderer.rect(x, y, SLOT_SIZE, 2); // Top
+                shapeRenderer.rect(x, y + SLOT_SIZE - 2, SLOT_SIZE, 2); // Bottom
+                shapeRenderer.rect(x, y, 2, SLOT_SIZE); // Left
+                shapeRenderer.rect(x + SLOT_SIZE - 2, y, 2, SLOT_SIZE); // Right
+            }
         }
         shapeRenderer.end();
 
@@ -256,6 +328,10 @@ public class Renderer {
             if (stack != null && !stack.isEmpty()) {
                 float x = startX + INVENTORY_PADDING + col * (SLOT_SIZE + INVENTORY_PADDING);
                 float y = startY + INVENTORY_PADDING;
+                
+                // Draw block texture
+                TextureRegion texture = textureManager.getBlockTexture(stack.getBlock());
+                spriteBatch.draw(texture, x + 5, y + 5, SLOT_SIZE - 10, SLOT_SIZE - 10);
                 
                 // Draw count
                 String count = String.valueOf(stack.getCount());
