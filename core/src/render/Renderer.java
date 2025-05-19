@@ -200,6 +200,24 @@ public class Renderer {
             }
         }
         shapeRenderer.end();
+
+        // Draw items and counts
+        spriteBatch.begin();
+        for (int row = 0; row < INVENTORY_ROWS; row++) {
+            for (int col = 0; col < INVENTORY_COLS; col++) {
+                int slot = row * INVENTORY_COLS + col;
+                ItemStack stack = player.getInventory().getStack(slot);
+                if (stack != null && !stack.isEmpty()) {
+                    float x = startX + INVENTORY_PADDING + col * (SLOT_SIZE + INVENTORY_PADDING);
+                    float y = startY + INVENTORY_PADDING + row * (SLOT_SIZE + INVENTORY_PADDING);
+                    
+                    // Draw count
+                    String count = String.valueOf(stack.getCount());
+                    font.draw(spriteBatch, count, x + SLOT_SIZE - 20, y + 20);
+                }
+            }
+        }
+        spriteBatch.end();
     }
 
     private void renderHotbar() {
@@ -229,6 +247,22 @@ public class Renderer {
             shapeRenderer.rect(x, y, SLOT_SIZE, SLOT_SIZE);
         }
         shapeRenderer.end();
+
+        // Draw items and counts
+        spriteBatch.begin();
+        for (int col = 0; col < INVENTORY_COLS; col++) {
+            int slot = col;
+            ItemStack stack = player.getInventory().getStack(slot);
+            if (stack != null && !stack.isEmpty()) {
+                float x = startX + INVENTORY_PADDING + col * (SLOT_SIZE + INVENTORY_PADDING);
+                float y = startY + INVENTORY_PADDING;
+                
+                // Draw count
+                String count = String.valueOf(stack.getCount());
+                font.draw(spriteBatch, count, x + SLOT_SIZE - 20, y + 20);
+            }
+        }
+        spriteBatch.end();
     }
 
     public void setInventoryVisible(boolean visible) {

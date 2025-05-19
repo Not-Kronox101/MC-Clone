@@ -95,44 +95,41 @@ public class InputHandler {
     }
 
     private void handleBlockInteraction() {
+        RaycastResult hit = RayCaster.cast(world, player);
+        if (hit == null) return;
+
         // Break block with L key
         if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
-            RaycastResult hit = RayCaster.cast(world, player);
-            if (hit != null) {
-                Block block = world.getBlock(hit.x, hit.y, hit.z);
-                if (block != Block.AIR) {
-                    // Remove block and add to inventory
-                    world.setBlock(hit.x, hit.y, hit.z, Block.AIR);
-                    player.addToInventory(block);
-                    // Update renderer
-                    renderer.updateBlock(hit.x, hit.y, hit.z, Block.AIR);
-                }
+            Block block = world.getBlock(hit.x, hit.y, hit.z);
+            if (block != Block.AIR) {
+                // Remove block and add to inventory
+                world.setBlock(hit.x, hit.y, hit.z, Block.AIR);
+                player.addToInventory(block);
+                // Update renderer
+                renderer.updateBlock(hit.x, hit.y, hit.z, Block.AIR);
             }
         }
 
         // Place block with K key
         if (Gdx.input.isKeyJustPressed(Input.Keys.K)) {
-            RaycastResult hit = RayCaster.cast(world, player);
-            if (hit != null) {
-                // Calculate placement position based on hit face
-                int placeX = hit.x + hit.faceX;
-                int placeY = hit.y + hit.faceY;
-                int placeZ = hit.z + hit.faceZ;
+            // Calculate placement position based on hit face
+            int placeX = hit.x + hit.faceX;
+            int placeY = hit.y + hit.faceY;
+            int placeZ = hit.z + hit.faceZ;
 
-                // Check if placement position is valid
-                if (world.isInBounds(placeX, placeY, placeZ)) {
-                    Block currentBlock = world.getBlock(placeX, placeY, placeZ);
-                    if (currentBlock == Block.AIR) {
-                        // Check if player has the block in inventory
-                        Block blockToPlace = player.getSelectedBlock();
-                        if (blockToPlace != null) {
-                            // Check if placement would cause collision
-                            if (!player.wouldCollide(placeX + 0.5f, placeY + 0.5f, placeZ + 0.5f)) {
-                                world.setBlock(placeX, placeY, placeZ, blockToPlace);
-                                player.removeFromInventory(blockToPlace);
-                                // Update renderer
-                                renderer.updateBlock(placeX, placeY, placeZ, blockToPlace);
-                            }
+            // Check if placement position is valid
+            if (world.isInBounds(placeX, placeY, placeZ)) {
+                Block currentBlock = world.getBlock(placeX, placeY, placeZ);
+                if (currentBlock == Block.AIR) {
+                    // Check if player has the block in inventory
+                    Block blockToPlace = player.getSelectedBlock();
+                    if (blockToPlace != null) {
+                        // Check if placement would cause collision with player
+                        if (!player.wouldCollide(placeX + 0.5f, placeY + 0.5f, placeZ + 0.5f)) {
+                            world.setBlock(placeX, placeY, placeZ, blockToPlace);
+                            player.removeFromInventory(blockToPlace);
+                            // Update renderer
+                            renderer.updateBlock(placeX, placeY, placeZ, blockToPlace);
                         }
                     }
                 }

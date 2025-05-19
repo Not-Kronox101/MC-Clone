@@ -125,16 +125,14 @@ public class Player {
     }
 
     public void addToInventory(Block block) {
-        // For now, just set the selected block
-        selectedBlock = block;
+        inventory.addItem(block, 1);
     }
 
     public void removeFromInventory(Block block) {
-        // For now, just clear the selected block
-        selectedBlock = null;
+        inventory.removeItem(block, 1);
     }
 
     public Block getSelectedBlock() {
-        return selectedBlock;
+        return inventory.getSelectedBlock();
     }
 }
