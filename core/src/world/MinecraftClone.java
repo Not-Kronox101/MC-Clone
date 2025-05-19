@@ -9,13 +9,13 @@ import input.InputHandler;
 import player.Player;
 import render.Renderer;
 import render.TextureManager;
+import utils.Constants;
 
 public class MinecraftClone extends ApplicationAdapter {
     private TextureManager textureManager;
     private Renderer renderer;
     private World world;
     private PerspectiveCamera camera;
-
     private Player player;
     private CameraController cameraController;
     private InputHandler inputHandler;
@@ -28,14 +28,17 @@ public class MinecraftClone extends ApplicationAdapter {
         world = new World();
 
         camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.near = 0.1f;
-        camera.far = 100f;
+        camera.near = 0.01f;
+        camera.far = 1000f;
 
-        player = new Player(world, 10f, 10f, 10f); // Set initial position
-        cameraController = new CameraController(camera, player);
-        inputHandler = new InputHandler(player, world);
-
+        // Start player above the grass layer (y=14)
+        player = new Player(world, 8f, 16f, 8f);
         renderer = new Renderer(world, textureManager, player);
+        inputHandler = new InputHandler(player, world, renderer, this);
+        cameraController = new CameraController(camera, player, inputHandler);
+
+        // Set initial cursor state
+        Gdx.input.setCursorCatched(true);
     }
 
     @Override

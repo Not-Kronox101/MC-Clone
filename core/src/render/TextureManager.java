@@ -5,47 +5,96 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import world.Block;
 
-import java.util.EnumMap;
-
 public class TextureManager {
-    private static final int TILE_SIZE = 16;  // pixels per tile in the atlas
-    private static final int ATLAS_WIDTH = 256;  // width of the full atlas in pixels
-    private static final int ATLAS_HEIGHT = 256;
-
-    private Texture atlasTexture;
-    private EnumMap<Block, TextureRegion> blockTextures;
+    private Texture atlas;
+    private static final int TEXTURE_SIZE = 16;
+    private static final int ATLAS_SIZE = 256;
 
     public void load() {
-        atlasTexture = new Texture(Gdx.files.internal("assets/texture_atlas.png"));
-        atlasTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-
-        blockTextures = new EnumMap<>(Block.class);
-        generateRegions();
+        atlas = new Texture(Gdx.files.internal("assets/textures/blocks.png"));
     }
 
-    private void generateRegions() {
-        int tilesX = ATLAS_WIDTH / TILE_SIZE;
-        int tilesY = ATLAS_HEIGHT / TILE_SIZE;
+    private Texture createDefaultTexture() {
+        // Create a 256x16 texture with different colored blocks
+        com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(256, 16, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+        
+        // Grass (green)
+        pixmap.setColor(0.2f, 0.8f, 0.2f, 1);
+        pixmap.fillRectangle(0, 0, 16, 16);
+        
+        // Dirt (brown)
+        pixmap.setColor(0.6f, 0.3f, 0.1f, 1);
+        pixmap.fillRectangle(16, 0, 16, 16);
+        
+        // Stone (gray)
+        pixmap.setColor(0.5f, 0.5f, 0.5f, 1);
+        pixmap.fillRectangle(32, 0, 16, 16);
+        
+        // Bedrock (dark gray)
+        pixmap.setColor(0.2f, 0.2f, 0.2f, 1);
+        pixmap.fillRectangle(48, 0, 16, 16);
+        
+        // Water (blue)
+        pixmap.setColor(0.0f, 0.0f, 0.8f, 0.8f);
+        pixmap.fillRectangle(64, 0, 16, 16);
+        
+        // Log (brown)
+        pixmap.setColor(0.4f, 0.2f, 0.1f, 1);
+        pixmap.fillRectangle(80, 0, 16, 16);
+        
+        // Leaves (dark green)
+        pixmap.setColor(0.0f, 0.6f, 0.0f, 1);
+        pixmap.fillRectangle(96, 0, 16, 16);
 
-        for (Block block : Block.values()) {
-            int index = block.getId(); // e.g., grass = 0, dirt = 1, etc.
-            int x = index % tilesX;
-            int y = tilesY - 1 - (index / tilesX);
-
-            TextureRegion region = new TextureRegion(atlasTexture, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            blockTextures.put(block, region);
-        }
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 
     public TextureRegion getBlockTexture(Block block) {
-        return blockTextures.get(block);
+        int x = 0, y = 0;
+        switch (block) {
+            case GRASS:
+                x = 0;
+                y = 0;
+                break;
+            case DIRT:
+                x = 1;
+                y = 0;
+                break;
+            case STONE:
+                x = 2;
+                y = 0;
+                break;
+            case BEDROCK:
+                x = 3;
+                y = 0;
+                break;
+            case WATER:
+                x = 4;
+                y = 0;
+                break;
+            case LOG:
+                x = 5;
+                y = 0;
+                break;
+            case LEAVES:
+                x = 6;
+                y = 0;
+                break;
+            default:
+                return null;
+        }
+        return new TextureRegion(atlas, x * TEXTURE_SIZE, y * TEXTURE_SIZE, TEXTURE_SIZE, TEXTURE_SIZE);
     }
 
     public Texture getAtlasTexture() {
-        return atlasTexture;
+        return atlas;
     }
 
     public void dispose() {
-        atlasTexture.dispose();
+        if (atlas != null) {
+            atlas.dispose();
+        }
     }
 }

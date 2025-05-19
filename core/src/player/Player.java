@@ -1,5 +1,6 @@
 package player;
 
+import com.badlogic.gdx.math.Vector3;
 import world.Block;
 import world.World;
 import player.Inventory;
@@ -9,10 +10,14 @@ public class Player {
     private float x, y, z;        // Position
     private float yaw, pitch;
 
-    private static final float WIDTH = 0.6f;
-    private static final float HEIGHT = 1.8f;
-    private final Inventory inventory = new Inventory();
+    private static final float PLAYER_WIDTH = 0.6f;
+    private static final float PLAYER_HEIGHT = 1.8f;
+    private static final float PLAYER_DEPTH = 0.6f;
+    private static final float STEP_SIZE = 0.1f;  // Smaller steps for more precise collision
+    private final Inventory inventory;
     private final World world;
+
+    private Block selectedBlock = Block.GRASS; // Default selected block
 
     public Player(World world, float startX, float startY, float startZ) {
         this.world = world;
@@ -21,47 +26,76 @@ public class Player {
         this.z = startZ;
         this.yaw = 0f;
         this.pitch = 0f;
+        this.inventory = new Inventory();
     }
 
-    // Move with collision (Minecraft-style, axis-aligned)
     public void moveWithCollision(float dx, float dy, float dz, World world) {
-        float radius = WIDTH / 2;
+        // Move in smaller steps for more precise collision detection
+        float remainingX = dx;
+        float remainingY = dy;
+        float remainingZ = dz;
 
-        // X axis
-        if (!collidesAt(x + dx, y, z, radius)) {
-            x += dx;
-        }
-        // Y axis
-        if (!collidesAt(x, y + dy, z, radius)) {
-            y += dy;
-        }
-        // Z axis
-        if (!collidesAt(x, y, z + dz, radius)) {
-            z += dz;
+        // Handle Y movement first (vertical)
+        while (Math.abs(remainingY) > 0) {
+            float stepY = Math.signum(remainingY) * Math.min(Math.abs(remainingY), STEP_SIZE);
+            if (!wouldCollide(x, y + stepY, z)) {
+                y += stepY;
+            }
+            remainingY -= stepY;
         }
 
-        // Prevent falling below the world
-        if (y < 0) y = 0;
+        // Then handle X movement
+        while (Math.abs(remainingX) > 0) {
+            float stepX = Math.signum(remainingX) * Math.min(Math.abs(remainingX), STEP_SIZE);
+            if (!wouldCollide(x + stepX, y, z)) {
+                x += stepX;
+            }
+            remainingX -= stepX;
+        }
+
+        // Finally handle Z movement
+        while (Math.abs(remainingZ) > 0) {
+            float stepZ = Math.signum(remainingZ) * Math.min(Math.abs(remainingZ), STEP_SIZE);
+            if (!wouldCollide(x, y, z + stepZ)) {
+                z += stepZ;
+            }
+            remainingZ -= stepZ;
+        }
     }
 
-    private boolean collidesAt(float px, float py, float pz, float radius) {
-        int minX = (int) Math.floor(px - radius);
-        int maxX = (int) Math.floor(px + radius);
-        int minY = (int) Math.floor(py);
-        int maxY = (int) Math.floor(py + HEIGHT - 0.1f); // Y fix for first layer
-        int minZ = (int) Math.floor(pz - radius);
-        int maxZ = (int) Math.floor(pz + radius);
+    public boolean wouldCollide(float newX, float newY, float newZ) {
+        // Check more points around the player's bounding box
+        float minX = newX - PLAYER_WIDTH/2;
+        float maxX = newX + PLAYER_WIDTH/2;
+        float minY = newY;
+        float maxY = newY + PLAYER_HEIGHT;
+        float minZ = newZ - PLAYER_DEPTH/2;
+        float maxZ = newZ + PLAYER_DEPTH/2;
 
-        for (int xi = minX; xi <= maxX; xi++) {
-            for (int yi = minY; yi <= maxY; yi++) {
-                for (int zi = minZ; zi <= maxZ; zi++) {
-                    if (world.getBlock(xi, yi, zi) != Block.AIR) {
-                        return true;
-                    }
-                }
-            }
+        // Check all corners
+        if (world.isBlockSolid((int)minX, (int)minY, (int)minZ) ||
+            world.isBlockSolid((int)maxX, (int)minY, (int)minZ) ||
+            world.isBlockSolid((int)minX, (int)maxY, (int)minZ) ||
+            world.isBlockSolid((int)maxX, (int)maxY, (int)minZ) ||
+            world.isBlockSolid((int)minX, (int)minY, (int)maxZ) ||
+            world.isBlockSolid((int)maxX, (int)minY, (int)maxZ) ||
+            world.isBlockSolid((int)minX, (int)maxY, (int)maxZ) ||
+            world.isBlockSolid((int)maxX, (int)maxY, (int)maxZ)) {
+            return true;
         }
-        return false;
+
+        // Check middle points of each face
+        if (world.isBlockSolid((int)newX, (int)minY, (int)newZ) ||
+            world.isBlockSolid((int)newX, (int)maxY, (int)newZ) ||
+            world.isBlockSolid((int)minX, (int)newY, (int)newZ) ||
+            world.isBlockSolid((int)maxX, (int)newY, (int)newZ) ||
+            world.isBlockSolid((int)newX, (int)newY, (int)minZ) ||
+            world.isBlockSolid((int)newX, (int)newY, (int)maxZ)) {
+            return true;
+        }
+
+        // Check center of the player
+        return world.isBlockSolid((int)newX, (int)newY, (int)newZ);
     }
 
     // Getters
@@ -81,5 +115,26 @@ public class Player {
     public void setRotation(float yaw, float pitch) {
         this.yaw = yaw;
         this.pitch = pitch;
+    }
+
+    public void jump() {
+        // Simple jump implementation - just move up by a fixed amount
+        if (!wouldCollide(x, y + 0.1f, z)) {
+            y += 0.5f;
+        }
+    }
+
+    public void addToInventory(Block block) {
+        // For now, just set the selected block
+        selectedBlock = block;
+    }
+
+    public void removeFromInventory(Block block) {
+        // For now, just clear the selected block
+        selectedBlock = null;
+    }
+
+    public Block getSelectedBlock() {
+        return selectedBlock;
     }
 }
